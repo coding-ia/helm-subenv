@@ -10,3 +10,4 @@ downloaders:
   - command: "/bin/go_build_helm_subenv.exe"
     protocols:
     - "subenv"
+    - "subenv+sops"

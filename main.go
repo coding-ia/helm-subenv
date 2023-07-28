@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go.mozilla.org/sops/v3/decrypt"
 	"io"
 	"log"
 	"net/http"
@@ -18,27 +19,69 @@ func main() {
 		os.Exit(0)
 	}
 
-	s := strings.TrimPrefix(argsWithProg[4], "subenv://")
-	content := ""
-	isUri, _ := regexp.MatchString("^https?://", s)
+	r, _ := regexp.Compile("^(.*?)://")
+	prefix := r.FindString(argsWithProg[4])
 
-	if isUri {
-		expanded := os.ExpandEnv(s)
-		uri, err := url.ParseRequestURI(expanded)
+	content := ""
+
+	switch prefix {
+	case "subenv://":
+		content = getContent(argsWithProg[4])
+	case "subenv+sops://":
+		content = getContentSops(argsWithProg[4])
+	}
+
+	parsed := os.ExpandEnv(string(content))
+
+	fmt.Print(parsed)
+}
+
+func getContent(path string) string {
+	s := strings.TrimPrefix(path, "subenv://")
+
+	if isPathUri(s) {
+		return string(downloadContent(s))
+	} else {
+		return fileContent(s)
+	}
+}
+
+func getContentSops(path string) string {
+	s := strings.TrimPrefix(path, "subenv+sops://")
+
+	if isPathUri(s) {
+		content := downloadContent(s)
+		data, err := decrypt.Data(content, "yaml")
 
 		if err != nil {
 			os.Exit(0)
 		}
 
-		content = parseHttpContent(uri)
+		return string(data)
 	} else {
-		content = parseFile(s)
-	}
+		data, err := decrypt.File(path, "yaml")
 
-	fmt.Print(content)
+		if err != nil {
+			os.Exit(0)
+		}
+
+		return string(data)
+	}
 }
 
-func parseHttpContent(uri *url.URL) string {
+func isPathUri(path string) bool {
+	isUri, _ := regexp.MatchString("^https?://", path)
+	return isUri
+}
+
+func downloadContent(path string) []byte {
+	expanded := os.ExpandEnv(path)
+	uri, err := url.ParseRequestURI(expanded)
+
+	if err != nil {
+		os.Exit(0)
+	}
+
 	resp, err := http.Get(uri.String())
 	if err != nil {
 		os.Exit(0)
@@ -55,11 +98,10 @@ func parseHttpContent(uri *url.URL) string {
 		os.Exit(0)
 	}
 
-	parsed := os.ExpandEnv(string(content))
-	return parsed
+	return content
 }
 
-func parseFile(path string) string {
+func fileContent(path string) string {
 	if _, err := os.Stat(path); err != nil {
 		os.Exit(0)
 	}
@@ -75,7 +117,6 @@ func parseFile(path string) string {
 	}()
 
 	content, err := io.ReadAll(file)
-	parsed := os.ExpandEnv(string(content))
 
-	return parsed
+	return string(content)
 }
