@@ -7,28 +7,39 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 )
 
 func main() {
 	argsWithProg := os.Args
 
-	s := strings.TrimPrefix(argsWithProg[4], "subenv://")
-
-	content := ""
-	uri, err := url.ParseRequestURI(s)
-
-	if err != nil {
-		content = parseFile(s)
+	if len(argsWithProg) != 5 {
+		os.Exit(0)
 	}
 
-	_ = uri
+	s := strings.TrimPrefix(argsWithProg[4], "subenv://")
+	content := ""
+	isUri, _ := regexp.MatchString("^https?://", s)
+
+	if isUri {
+		expanded := os.ExpandEnv(s)
+		uri, err := url.ParseRequestURI(expanded)
+
+		if err != nil {
+			os.Exit(0)
+		}
+
+		content = parseHttpContent(uri)
+	} else {
+		content = parseFile(s)
+	}
 
 	fmt.Print(content)
 }
 
-func parseHttpContent(uri string) string {
-	resp, err := http.Get(uri)
+func parseHttpContent(uri *url.URL) string {
+	resp, err := http.Get(uri.String())
 	if err != nil {
 		os.Exit(0)
 	}
