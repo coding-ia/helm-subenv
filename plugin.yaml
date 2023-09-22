@@ -4,10 +4,10 @@ usage: "Replaces environmental variables in file with OS environmental variables
 description: |-
   This plugin provides the ability to use environmental variables for Helm charts
 useTunnel: false
-command: "$HELM_PLUGIN_DIR/bin/go_build_helm_subenv"
+command: "$HELM_PLUGIN_DIR/bin/subenv"
 
 downloaders:
-  - command: "/bin/go_build_helm_subenv.exe"
+  - command: "/bin/subenv"
     protocols:
     - "subenv"
     - "subenv+sops"
