@@ -1,0 +1,23 @@
+project_name: helm-subenv
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - binary: ./bin/subenv
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+archives:
+  - id: tar
+    format: tar.gz
+    wrap_in_directory: helm-subenv
+    files:
+      - LICENSE
+      - plugin.yaml
+release:
+  draft: true
