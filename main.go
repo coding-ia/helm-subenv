@@ -59,7 +59,7 @@ func getContentSops(path string) string {
 
 		return string(data)
 	} else {
-		data, err := decrypt.File(path, "yaml")
+		data, err := decrypt.File(s, "yaml")
 
 		if err != nil {
 			os.Exit(0)
