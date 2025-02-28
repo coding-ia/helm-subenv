@@ -2,7 +2,7 @@ module helm-subenv
 
 go 1.20
 
-require go.mozilla.org/sops/v3 v3.7.1
+require go.mozilla.org/sops/v3 v3.9.4
 
 require (
 	cloud.google.com/go v0.43.0 // indirect
