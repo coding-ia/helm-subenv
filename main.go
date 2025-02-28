@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"go.mozilla.org/sops/v3/decrypt"
+	"github.com/getsops/sops/v3/decrypt"
 	"io"
 	"log"
 	"net/http"
